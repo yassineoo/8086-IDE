@@ -1,27 +1,27 @@
-function getOps(str){//get operands
+"use strict";
+    var wordRegisters = ['AX', 'BX', 'CX', 'DX', 'CS', 'DS', 'ES', 'SS', 'DI', 'SI', 'SP', 'BP', 'IP']; 
+    var byteRegisters = ['AH', 'AL', 'BH', 'BL', 'CH', 'CL', 'DL', 'DH'];
+    var segmentRegisters = ['CS', 'DS', 'ES', 'SS'];
+ //get operands and its types exp: ["ax",'[1254+bx]',''Rx","M"] or ["al",0x12FF,''RL","I"]]
+function getOps(str){
+  let operands=[];
     let str2=str.replace(/\w+(?=\s)/,"").replace(/\s/g,"");
-    return (/,/.test(str2))?str2.split(','):str2.split();
-  }
-function convert(str)
-{
-    if(/^0x|h$/i.test(str))
-    {
-        str.replace(/^0x|h$/i,"").toUpperCase;
-        var bin=0b0;
-        for(let i=0;i<str.length;i++)
-        {
-            let x=str.charCodeAt(i);
-            if(x>64)
-           bin+=(x-55).toString(2);
-           else {
-           bin=(x-48).toString(2); 
-           }
-           bin=bin<<4
+    operands=(/,/.test(str2))?str2.split(','):str2.split();
+    if (operands[0]!=""){
+      let i=0;
+      let opsnumber=operands.length;
+      console.log("this a test "+operands[0].toUpperCase);
+      for(i; i<opsnumber;i++){
+        if (/\[.*\]/.test(operands[i])) {operands.push('M')}
+        else if (segmentRegisters.includes(operands[i].toUpperCase())){operands.push('S')}
+        else if (wordRegisters.includes(operands[i].toUpperCase())) { operands.push('RX')}
+        else if (byteRegisters.includes(operands[i].toUpperCase())){operands.push('Rl')}
+        else (operands.push('I'))
         }
-        return bin;
+      }
+      return operands
     }
-}
-function toBcode(str)
+function toBcode(str) // original functio to be class later 
 {
 var arr=[];
 let regex=/(?<=\s*)\S+/;
@@ -30,6 +30,7 @@ let instruction=str.match(regex);//match instruction
 switch(instruction.toUpperCase())
 {
   case "MOV":
+
    break;
   case "PUSH":
    break;
@@ -188,8 +189,8 @@ switch(instruction.toUpperCase())
     arr.push(0b11110100);
     break; 
 
-}
-function convert(str)
+}}
+  function convert(str)
   {
       if(/^0x|h$/i.test(str))
       {
@@ -207,15 +208,11 @@ function convert(str)
           return parseInt(str2,8);
       }
       else{
-          return parseInt(str2,10)
+          return parseInt(str,10)
       }     
   }
 
-}
-
-function getD(instruction) {
-
-    var operands = getOps(instruction);
+function getD(operands) {
 
     // from reg to memory 
     if (operands[0].includes("["))
@@ -235,9 +232,6 @@ function getD(instruction) {
 }
 
 function getW(instruction) {
-
-    var wordRegisters = ['AX', 'BX', 'CX', 'DX', 'CS', 'DS', 'ES', 'SS', 'DI', 'SI', 'SP', 'BP', 'IP']; 
-        byteRegisters = ['AH', 'AL', 'BH', 'BL', 'CH', 'CL', 'DL', 'DH'];
         opcodes = getOps(instruction);
 
     // register to memory
@@ -269,10 +263,134 @@ function getW(instruction) {
             return 0; 
 
         return -1;
-
     }
-
-
 }
 
+// ------------------------------- function define the zone (r/m) in op codes
 
+function regMem(ops){
+    if (getMod(ops)==3){
+        return regToId(ops[1]);}
+    else{
+    let i;
+    (/\[/.test(ops[0]))?i=0:/\[/.test(ops[1])?i=1:i=-1;
+     if (/(bx|si)+.*(bx|si)/i.test(ops[i])){return 0 }
+     else if (/(bx|di)+.*(bx|di)/i.test(ops[i])){return 1 }
+     else if (/(bp|si)+.*(bp|si)/i.test(ops[i])){return 2 }
+     else if (/(bp|di)+.*(bp|di)/i.test(ops[i])){return 3 }
+     else if (/si/i.test(ops[i])){return 4 }
+     else if (/di/i.test(ops[i])){return 5 }
+     else if (/bp/i.test(ops[i])){return 6 }
+     else if (/bx/i.test(ops[i])){return 7 }
+    }
+    }
+//---------------------------------------------get mod of instruction ------------------------------------------------------    
+
+function getMod(arr){
+  if( arr[0]!=""){
+      if(arr.length===2){     //if there's one operand
+      if(/R/.test(arr[1]))//if it's a register
+          {
+              return 0b11;
+          }
+          /*
+          for(var e=1;arr[e]!=="M" && e<arr.length;e++) {}
+          if(e)
+           */
+      else if(arr[1]==="M")
+          {
+          
+              var array=arr[0].slice(1,arr[0].length-1).split("+");//turn string to table of elements ex[ax,1234,bx]
+              
+                   for(var i=0;/[A-D][XHL]|[ECSD][S]|[BSD][PSI]]/.test(array[i]) && i<array.length;i++){}//decouvrer lindice de la partie numeric
+                   console.log("this is the first case i"+i);
+                   if(i<arr.length){
+                   if(convert(array[i])===0){
+                      return 0;
+                  }
+                  else if(convert(array[i])>255){
+                      return 0b10;
+                  }
+                  else{
+                      return 1;
+                  }
+                  } else {
+                   return 0;
+               }
+          }              
+      }
+      else{
+          if(/R/.test(arr[2]) && /R/.test(arr[3]) )
+          {
+              return 0b11;
+          }
+          else  {
+              var z=0;
+              (arr[2]==="M")?z=0:z=1;
+              var array=arr[z].slice(1,arr[0].length-1).split("+");//turn string to table of elements ex[ax,1234,bx]
+              for(var i=0;/[A-D][XHL]|[ECSD][S]|[BSD][PSI]]/i.test(array[i]) && i<array.length;i++){}//decouvrer lindice de la partie numeric
+              console.log("this is the second case  i "+i);
+              console.log(array[0]);
+              if(i<arr.length){
+                        if(convert(array[i])===0){
+                          return 0;
+                              }
+                        else if(convert(array[i])>255){
+                                  return 0b10;
+                              }
+                        else{
+                                  return 1;
+                              }
+               }
+                else {
+                    return 0;
+                }  
+
+          }
+      }
+  }
+  return -1;
+  }
+// -----------function return register id by passing it name as a parameter----------------------
+
+function regToId(regname){
+    switch(regname.toLowerCase()){
+        case 'al':
+        case 'ax':
+        case 'es':
+            return 0;
+            break;
+        case 'cl':
+        case 'cx':
+        case 'cs':
+            return 1;
+            break;
+        case 'dl':
+        case 'dx':
+        case 'ss':
+        
+            return 2;
+            break;
+        case 'bl':
+        case 'bx':
+        case 'ds':
+            return 3;
+            break;
+        case 'sp':
+        case 'ah':
+            return 4;
+            break;
+        case 'bp':
+        case 'ch':
+            return 5;
+            break;
+        case 'si':
+        case 'dh':
+            return 6;
+            break;
+           case 'di':
+        case 'bh':
+            return 7;
+            break;
+    }
+}
