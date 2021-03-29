@@ -218,9 +218,6 @@ function getD(instruction) {
 }
 
 function getW(instruction) {
-
-    var wordRegisters = ['AX', 'BX', 'CX', 'DX', 'CS', 'DS', 'ES', 'SS', 'DI', 'SI', 'SP', 'BP', 'IP']; 
-        byteRegisters = ['AH', 'AL', 'BH', 'BL', 'CH', 'CL', 'DL', 'DH'];
         opcodes = getOps(instruction);
 
     // register to memory
@@ -273,12 +270,7 @@ function regMem(ops){
      else if (/bx/i.test(ops[i])){return 7 }
     }
     }
-//---------------------------------------------------------------------------------------------------    
-     
-"use strict";
-    var wordRegisters = ['AX', 'BX', 'CX', 'DX', 'CS', 'DS', 'ES', 'SS', 'DI', 'SI', 'SP', 'BP', 'IP']; 
-    byteRegisters = ['AH', 'AL', 'BH', 'BL', 'CH', 'CL', 'DL', 'DH'];
-
+//---------------------------------------------get mod of instruction ------------------------------------------------------    
 
     function getMod(arr){
         if(arr.length==1 && arr[0]!=""){//if there's one operand
