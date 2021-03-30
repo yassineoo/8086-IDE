@@ -36,12 +36,13 @@ function encodeMov(opcode, D, W) {
 function getNum(str)//turn a string number BETWEEN BRACKETS to number
 {
     var x=str.match(/(?<=(\s|\+|\[))(0x\w+|\d+|0b\d+)(?=(\s|\+|\]))/gi);
+    if (x=='') {return 0}
     return convert(x[0]);
 }
 
 function splitNum(num){
     var arr=[];
-     if(num>255)
+      if(num>255)
      {
          arr.push(num & 0b0000000011111111);
          num>>=8;
@@ -68,9 +69,9 @@ switch(instruction[0].toUpperCase())
     // Register/Memory to/from Register
     if (/R|M/.test(operands[2])  && /R|M/.test(operands[3])) {
 
-        let opcode = 0b100010;
-            w = getW(operands);
-            mode = getMod(operands);
+        let opcode = 0b100010,
+            w = getW(operands),
+            mode = getMod(operands),
             result = 0;
             
 
@@ -78,7 +79,7 @@ switch(instruction[0].toUpperCase())
         if (/M/.test(operands[2]) && /R/.test(operands[3])) {
 
             arr.push(encodeMov(opcode, 0, w));
-            result = (mode << 6) + (regToId(operands[3]) << 3) +  regMem(operands);
+            result = (mode << 6) + (regToId(operands[1]) << 3) +  regMem(operands);
 
             arr.push(result);
 
@@ -88,13 +89,18 @@ switch(instruction[0].toUpperCase())
 
             arr.push(encodeMov(opcode, 1, w ));
 
-            result = (mode << 6) + (regToId(operands[2]) << 3) +  regMem(operands);
+            result = (mode << 6) + (regToId(operands[0]) << 3) +  regMem(operands);
             arr.push(result);
 
         }            
+    let disp=splitNum(getNum(str));
+    if (!disp==[]){
+        console.log(disp);
+        arr=arr.concat(disp);
+    } 
 
     }
-
+    console.log(arr);
     // Immediate to Register/Memory
 
     
